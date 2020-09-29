@@ -7,7 +7,8 @@ $operation = 'delete';
 if ( isset($_POST[$operation]) ) {
     delete();
 } else {
-    $prepared_profile = retrieve_prepared_profile($operation);
+    require_once 'pdo.php';
+    $prepared_profile = retrieve_prepared_profile($operation, $pdo);
 }
 ?>
 <!DOCTYPE html>

@@ -82,7 +82,7 @@ function add_or_edit($operation) {
     $stmt = $pdo->prepare($sql);
     $stmt->execute($placeholders);
     $profile_id = ( $operation == 'add' ) ? $pdo->lastInsertId() : $_POST['profile_id'];
-    add_or_edit_all_positions($profile_id, $operation);
+    add_or_edit_all_positions($profile_id, $operation, $pdo);
     header('Location: index.php');
     exit;
 }

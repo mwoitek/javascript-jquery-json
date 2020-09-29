@@ -1,9 +1,7 @@
 <?php
-require_once 'delete_edit_view_functions.php';
 $operation = 'view';
-$prepared_profile = retrieve_prepared_profile($operation);
-require_once 'position_functions.php';
-$prepared_positions = retrieve_prepared_positions();
+require_once 'profile_positions.php';
+list($prepared_profile, $prepared_positions) = retrieve_prepared_profile_positions($operation);
 ?>
 <!DOCTYPE html>
 <html>
@@ -22,6 +20,7 @@ require_once 'bootstrap.php';
 <p>Headline:<br><?php echo $prepared_profile['headline']; ?></p>
 <p>Summary:<br><?php echo $prepared_profile['summary']; ?></p>
 <?php
+require_once 'position_functions.php';
 print_positions($prepared_positions, $operation);
 ?>
 <p><a href='index.php'>Done</a></p>

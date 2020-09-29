@@ -33,8 +33,7 @@ function validate_position($operation) {
     }
 }
 
-function add_position($profile_id, $rank, $year, $desc) {
-    require_once 'pdo.php';
+function add_position($profile_id, $rank, $year, $desc, $pdo) {
     $placeholders = array(
         ':pid' => $profile_id,
         ':rk' => $rank,
@@ -47,17 +46,16 @@ function add_position($profile_id, $rank, $year, $desc) {
     $stmt->execute($placeholders);
 }
 
-function delete_all_positions($profile_id) {
-    require_once 'pdo.php';
+function delete_all_positions($profile_id, $pdo) {
     $sql = 'DELETE FROM Position WHERE profile_id = :pid';
     $stmt = $pdo->prepare($sql);
     $stmt->execute(array(':pid' => $profile_id));
 }
 
-function add_or_edit_all_positions($profile_id, $operation) {
+function add_or_edit_all_positions($profile_id, $operation, $pdo) {
     // $operation = 'add' or 'edit'
     if ( $operation == 'edit' ) {
-        delete_all_positions($profile_id);
+        delete_all_positions($profile_id, $pdo);
     }
     $rank = 1;
     for ( $pos = 1; $pos < 10; $pos++ ) {
@@ -66,14 +64,13 @@ function add_or_edit_all_positions($profile_id, $operation) {
         if ( isset($_POST[$year_str]) && isset($_POST[$desc_str]) ) {
             $year = $_POST[$year_str];
             $desc = $_POST[$desc_str];
-            add_position($profile_id, $rank, $year, $desc);
+            add_position($profile_id, $rank, $year, $desc, $pdo);
             $rank++;
         }
     }
 }
 
-function retrieve_position_data() {
-    require_once 'pdo.php';
+function retrieve_position_data($pdo) {
     $sql = 'SELECT year, description FROM Position WHERE profile_id = :pid ORDER BY rank';
     $stmt = $pdo->prepare($sql);
     $stmt->execute(array(':pid' => $_GET['profile_id']));
@@ -93,8 +90,8 @@ function prepare_position_data($positions) {
     return $prepared_positions;
 }
 
-function retrieve_prepared_positions() {
-    $positions = retrieve_position_data();
+function retrieve_prepared_positions($pdo) {
+    $positions = retrieve_position_data($pdo);
     $prepared_positions = prepare_position_data($positions);
     return $prepared_positions;
 }
@@ -114,7 +111,7 @@ function print_position_div($count_pos, $year, $desc) {
     echo '<div id="position' . $count_pos . '">' . "\n";
     echo '<p>Year: <input type="text" name="year' . $count_pos . '" value="' . $year . '">' . "\n";
     echo '<input type="button" value="-" onclick="$(';
-    echo "\'#position" . $count_pos . "\'" . ').remove(); return false;"></p>' . "\n";
+    echo '\'#position' . $count_pos . '\').remove(); return false;"></p>' . "\n";
     echo '<textarea name="desc' . $count_pos . '" rows="8" cols="80">' . "\n";
     echo $desc . "\n</textarea>\n</div>\n";
 }

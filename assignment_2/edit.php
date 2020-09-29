@@ -7,10 +7,8 @@ if ( isset($_POST[$operation]) ) {
     require_once 'add_edit_functions.php';
     handle_post_data($operation);
 } else {
-    require_once 'delete_edit_view_functions.php';
-    $prepared_profile = retrieve_prepared_profile($operation);
-    require_once 'position_functions.php';
-    $prepared_positions = retrieve_prepared_positions();
+    require_once 'profile_positions.php';
+    list($prepared_profile, $prepared_positions) = retrieve_prepared_profile_positions($operation);
 }
 ?>
 <!DOCTYPE html>
@@ -44,6 +42,7 @@ print_error_or_success();
 <p>Position: <input type='submit' id='addPos' value='+'>
 <div id='position_fields'>
 <?php
+require_once 'position_functions.php';
 print_positions($prepared_positions, $operation);
 ?>
 </div></p>

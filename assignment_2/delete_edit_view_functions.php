@@ -8,14 +8,13 @@ function delete() {
     $stmt = $pdo->prepare($sql);
     $profile_id = $_POST['profile_id'];
     $stmt->execute(array(':pid' => $profile_id));
-    delete_all_positions($profile_id);
+    delete_all_positions($profile_id, $pdo);
     $_SESSION['success'] = 'Profile deleted';
     header('Location: index.php');
     exit;
 }
 
-function retrieve_profile_data($operation) {
-    require_once 'pdo.php';
+function retrieve_profile_data($operation, $pdo) {
     $extra_fields = ( $operation == 'delete' ) ? '' : ', email, headline, summary';
     $extra_condition = ( $operation == 'view' ) ? '' : ' AND user_id = :uid';
     $sql = 'SELECT first_name, last_name' . $extra_fields . ' FROM Profile '
@@ -46,8 +45,8 @@ function prepare_profile_data($profile) {
     return $prepared_profile;
 }
 
-function retrieve_prepared_profile($operation) {
-    $profile = retrieve_profile_data($operation);
+function retrieve_prepared_profile($operation, $pdo) {
+    $profile = retrieve_profile_data($operation, $pdo);
     invalid_id_redirect($profile);
     $prepared_profile = prepare_profile_data($profile);
     return $prepared_profile;
