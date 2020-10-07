@@ -1,14 +1,14 @@
 <?php
     session_start();
     require_once 'universal_functions.php';
+    require_once 'pdo.php';
+    require_once 'delete_edit_view_functions.php';
     delete_edit_redirect();
     $operation = 'delete';
-    require_once 'delete_edit_view_functions.php';
     if ( isset($_POST[$operation]) ) {
         delete();
     } else {
-        require_once 'pdo.php';
-        $prepared_profile = retrieve_prepared_profile($operation, $pdo);
+        $prepared_profile = retrieve_prepared_profile($operation);
     }
 ?>
 <!DOCTYPE html>

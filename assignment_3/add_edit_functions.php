@@ -1,6 +1,8 @@
 <?php
 // $operation = 'add' or 'edit'
 
+require_once 'universal_functions.php';
+
 $fields = array(
     'first_name',
     'last_name',
@@ -33,7 +35,6 @@ function check_all_fields_filled($operation) {
         $is_filled = check_if_field_is_filled($field);
         if ( !$is_filled ) {
             $_SESSION['error'] = 'All fields are required';
-            require_once 'universal_functions.php';
             header(where_to_redirect($operation));
             exit;
         }
@@ -43,22 +44,90 @@ function check_all_fields_filled($operation) {
 function check_email_contains_at_sign($operation) {
     if ( strpos($_POST['email'], '@') == false ) {
         $_SESSION['error'] = 'Email address must contain @';
-        require_once 'universal_functions.php';
         header(where_to_redirect($operation));
         exit;
+    }
+}
+
+function check_year_description($year, $desc, $operation) {
+    if ( strlen($year) == 0 || strlen($desc) == 0 ) {
+        $_SESSION['error'] = 'All fields are required';
+        header(where_to_redirect($operation));
+        exit;
+    }
+}
+
+function check_year_is_numeric($year, $operation) {
+    if ( !is_numeric($year) ) {
+        $_SESSION['error'] = 'Year must be numeric';
+        header(where_to_redirect($operation));
+        exit;
+    }
+}
+
+function retrieve_used_positions() {
+    return explode(',', $_POST['used_positions']);
+}
+
+function validate_position($used_positions, $operation) {
+    foreach ( $used_positions as $pos ) {
+        $year_str = 'year' . $pos;
+        $desc_str = 'desc' . $pos;
+        if ( isset($_POST[$year_str]) && isset($_POST[$desc_str]) ) {
+            $year = $_POST[$year_str];
+            $desc = $_POST[$desc_str];
+            check_year_description($year, $desc, $operation);
+            check_year_is_numeric($year, $operation);
+        }
     }
 }
 
 function validate_profile_data($operation) {
     check_all_fields_filled($operation);
     check_email_contains_at_sign($operation);
-    require_once 'position_functions.php';
-    validate_position($operation);
+    $used_positions = retrieve_used_positions();
+    if ( $used_positions !== false ) {
+        validate_position($used_positions, $operation);
+    }
+}
+
+function add_position($profile_id, $rank, $year, $desc) {
+    global $pdo;
+    $placeholders = array(
+        ':pid' => $profile_id,
+        ':rk' => $rank,
+        ':yr' => $year,
+        ':dc' => $desc
+    );
+    $sql = 'INSERT INTO Position (profile_id, rank, year, description) '
+         . 'VALUES (:pid, :rk, :yr, :dc)';
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($placeholders);
+}
+
+function add_or_edit_all_positions($profile_id, $operation) {
+    if ( $operation == 'edit' ) {
+        require_once 'delete_all_positions.php';
+        delete_all_positions($profile_id);
+    }
+    $used_positions = retrieve_used_positions();
+    if ( $used_positions !== false ) {
+        $rank = 1;
+        foreach ( $used_positions as $pos ) {
+            $year_str = 'year' . $pos;
+            $desc_str = 'desc' . $pos;
+            if ( isset($_POST[$year_str]) && isset($_POST[$desc_str]) ) {
+                $year = $_POST[$year_str];
+                $desc = $_POST[$desc_str];
+                add_position($profile_id, $rank, $year, $desc);
+                $rank++;
+            }
+        }
+    }
 }
 
 function add_or_edit($operation) {
-    require_once 'pdo.php';
-    require_once 'position_functions.php';
+    global $pdo;
     $placeholders = array(
         ':uid' => $_SESSION['user_id'],
         ':fn' => $_POST['first_name'],
@@ -82,7 +151,7 @@ function add_or_edit($operation) {
     $stmt = $pdo->prepare($sql);
     $stmt->execute($placeholders);
     $profile_id = ( $operation == 'add' ) ? $pdo->lastInsertId() : $_POST['profile_id'];
-    add_or_edit_all_positions($profile_id, $operation, $pdo);
+    add_or_edit_all_positions($profile_id, $operation);
     header('Location: index.php');
     exit;
 }
@@ -92,5 +161,15 @@ function handle_post_data($operation) {
         validate_profile_data($operation);
         add_or_edit($operation);
     }
+}
+
+function set_count_pos($operation) {
+    if ( $operation == 'add' ) {
+        $count_pos = 0;
+    } else {
+        global $prepared_positions;
+        $count_pos = count($prepared_positions);
+    }
+    echo '<script>count_pos = ' . $count_pos . ";</script>\n";
 }
 ?>
